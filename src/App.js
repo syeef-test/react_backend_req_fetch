@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
+
 import MoviesList from "./components/MoviesList";
 import "./App.css";
 
@@ -6,62 +7,45 @@ function App() {
   const [movies, setMovies] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [retryInterval, setRetryInterval] = useState(null);
 
-  useEffect(() => {
-    return () => {
-      clearInterval(retryInterval);
-    };
-  }, [retryInterval]);
-
-  async function fetchMoviesHandler() {
+  const fetchMoviesHandler = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
     try {
-      setIsLoading(true);
-      setError(null);
-      const response = await fetch("https://swapi.dev/api/filmss");
-
+      const response = await fetch("https://swapi.dev/api/films/");
       if (!response.ok) {
-        throw new Error("Something went wrong....Retrying");
+        throw new Error("Something went wrong!");
       }
 
       const data = await response.json();
-      const transformedMovies = data.results.map((movieData) => ({
-        id: movieData.episode_id,
-        title: movieData.title,
-        openingText: movieData.opening_crawl,
-        releaseDate: movieData.release_date,
-      }));
 
+      const transformedMovies = data.results.map((movieData) => {
+        return {
+          id: movieData.episode_id,
+          title: movieData.title,
+          openingText: movieData.opening_crawl,
+          releaseDate: movieData.release_date,
+        };
+      });
       setMovies(transformedMovies);
-      setIsLoading(false);
     } catch (error) {
       setError(error.message);
-      setIsLoading(false);
-      const intervalId = setInterval(fetchMoviesHandler, 5000);
-      setRetryInterval(intervalId);
     }
-  }
-
-  function cancelRetryHandler() {
-    clearInterval(retryInterval);
-    setError(null);
     setIsLoading(false);
-  }
+  }, []);
 
-  let content = <p>Found No Movies</p>;
+  useEffect(() => {
+    fetchMoviesHandler();
+  }, [fetchMoviesHandler]);
+
+  let content = <p>Found no movies.</p>;
 
   if (movies.length > 0) {
     content = <MoviesList movies={movies} />;
   }
 
   if (error) {
-    content = (
-      <React.Fragment>
-        <p>{error}</p>
-        <button onClick={fetchMoviesHandler}>Retry</button>
-        <button onClick={cancelRetryHandler}>Cancel</button>
-      </React.Fragment>
-    );
+    content = <p>{error}</p>;
   }
 
   if (isLoading) {
@@ -71,9 +55,7 @@ function App() {
   return (
     <React.Fragment>
       <section>
-        <button onClick={fetchMoviesHandler} disabled={isLoading}>
-          Fetch Movies
-        </button>
+        <button onClick={fetchMoviesHandler}>Fetch Movies</button>
       </section>
       <section>{content}</section>
     </React.Fragment>
