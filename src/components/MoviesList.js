@@ -1,21 +1,26 @@
-import React from 'react';
+import React from "react";
+import Movie from "./Movie";
+import classes from "./MoviesList.module.css";
 
-import Movie from './Movie';
-import classes from './MoviesList.module.css';
+const MoviesList = (props) => {
+  const handleDelete = (movieId) => {
+    props.onDeleteMovie(movieId);
+  };
 
-const MovieList = (props) => {
   return (
-    <ul className={classes['movies-list']}>
+    <ul className={classes["movies-list"]}>
       {props.movies.map((movie) => (
-        <Movie
-          key={movie.id}
-          title={movie.title}
-          releaseDate={movie.releaseDate}
-          openingText={movie.openingText}
-        />
+        <li key={movie.id}>
+          <Movie
+            title={movie.title}
+            releaseDate={movie.releaseDate}
+            openingText={movie.openingText}
+          />
+          <button onClick={() => handleDelete(movie.id)}>Delete</button>
+        </li>
       ))}
     </ul>
   );
 };
 
-export default MovieList;
+export default MoviesList;
